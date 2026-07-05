@@ -11,11 +11,14 @@ The main objects for the system I believe should be the User (holds user informa
 - Briefly describe your initial UML design.
 - What classes did you include, and what responsibilities did you assign to each?
 
+I have User, Pet, Task, and Day classes. The responsibilities are as follows: User- defines the user, their availability, and their pets. Pet- defines the pet and required tasks, Task - defines the task such as completion status and timing, and Day- describes the tasks in the day which can be modified and sorted. 
+
 **b. Design changes**
 
-- Did your design change during implementation?
+- Did your design change during implementation? 
+Yes 
 - If yes, describe at least one change and why you made it.
-
+One change is that tasks do not link back to the pet that needs that task done. If a user has multiple pets and only one needs medication, there's no link back to the pet that needs that task enacted on it. So the change is to set the task with the pet name when you add a task to the pet. 
 ---
 
 ## 2. Scheduling Logic and Tradeoffs

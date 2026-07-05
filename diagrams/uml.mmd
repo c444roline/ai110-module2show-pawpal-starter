@@ -4,25 +4,26 @@ classDiagram
         +str available_start
         +str available_end
         +list~Pet~ pets
+        +list~Day~ days
         +set_name(name: str) None
         +set_availability(start: str, end: str) None
-        +get_available_minutes() int
         +add_pet(pet: Pet) None
         +remove_pet(name: str) bool
+        +add_day(day: Day) None
+        +remove_day(name: str) bool
     }
 
     class Pet {
         +str name
-        +str species
         +list~Task~ tasks
         +set_name(name: str) None
-        +set_species(species: str) None
         +add_task(task: Task) None
         +remove_task(title: str) bool
     }
 
     class Task {
         +str title
+        +str pet_name
         +str description
         +int duration_minutes
         +str priority
@@ -36,6 +37,8 @@ classDiagram
 
     class Day {
         +str name
+        +str start_time
+        +str end_time
         +list~Task~ tasks
         +add_task(task: Task) bool
         +remove_task(title: str) bool
@@ -47,6 +50,6 @@ classDiagram
     }
 
     User "1" --> "1..*" Pet : owns
+    User "1" --> "0..*" Day : schedules
     Pet "1" --> "0..*" Task : requires
     Day "1" o-- "0..*" Task : contains
-    User "1" --> "0..*" Day : schedules
