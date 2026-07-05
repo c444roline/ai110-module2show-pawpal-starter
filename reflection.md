@@ -2,6 +2,10 @@
 
 ## 1. System Design
 
+The three core actions a user should be able to perform are to set up their information and their pets information, outline any constraints or scheduling details or specific tasks, and view and edit the final task schedule.
+
+The main objects for the system I believe should be the User (holds user information like name and scheduling constraints; performs modifications to its fields), Pet (holds pet name, needs, and time sensitive information; performs modifications to its fields and creation/deletion of itself), Task (holds the task name, description, time sensitive information; performs text modifications to its fields and creation/deletion of itself), Day (holds the day name, tasks during that day; performs modifications to its fields, sorting by time). 
+
 **a. Initial design**
 
 - Briefly describe your initial UML design.

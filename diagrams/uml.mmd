@@ -1,15 +1,52 @@
 classDiagram
-    %% Replace the placeholders below with your actual classes, attributes, methods, and relationships.
-    %% Keep this file updated so it matches your final implementation.
-
-    class ClassName {
-        +type attribute
-        +method() returnType
+    class User {
+        +str name
+        +str available_start
+        +str available_end
+        +list~Pet~ pets
+        +set_name(name: str) None
+        +set_availability(start: str, end: str) None
+        +get_available_minutes() int
+        +add_pet(pet: Pet) None
+        +remove_pet(name: str) bool
     }
 
-    class AnotherClass {
-        +type attribute
-        +method() returnType
+    class Pet {
+        +str name
+        +str species
+        +list~Task~ tasks
+        +set_name(name: str) None
+        +set_species(species: str) None
+        +add_task(task: Task) None
+        +remove_task(title: str) bool
     }
 
-    ClassName --> AnotherClass : relationship
+    class Task {
+        +str title
+        +str description
+        +int duration_minutes
+        +str priority
+        +str preferred_time
+        +bool completed
+        +mark_complete() None
+        +set_priority(priority: str) None
+        +set_duration(minutes: int) None
+        +set_preferred_time(time: str) None
+    }
+
+    class Day {
+        +str name
+        +list~Task~ tasks
+        +add_task(task: Task) bool
+        +remove_task(title: str) bool
+        +sort_by_priority() None
+        +sort_by_time() None
+        +get_total_duration() int
+        +generate_schedule() list~dict~
+        +explain_plan() str
+    }
+
+    User "1" --> "1..*" Pet : owns
+    Pet "1" --> "0..*" Task : requires
+    Day "1" o-- "0..*" Task : contains
+    User "1" --> "0..*" Day : schedules
