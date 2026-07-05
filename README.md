@@ -65,11 +65,29 @@ pytest --cov
 ```
 
 Sample test output:
-
+```
+  Schedule for Today
+  --------------------------------------------------
+  08:00  [HIGH]   Morning walk [Pinky]  (30 min)
+  08:30  [HIGH]   Breakfast [Chungus]  (15 min)
+  09:00  [HIGH]   Flea medication [Pinky]  (10 min)
+  10:00  [MEDIUM] Grooming [Chungus]  (45 min)
+  13:00  [LOW]    Afternoon nap check [Pinky]  (10 min)
+  --------------------------------------------------
+  Total: 110 minutes
+```
 ```
 # Paste your pytest output here
 ```
+============================= test session starts =============================
+platform win32 -- Python 3.14.2, pytest-9.0.3, pluggy-1.6.0
+rootdir: C:\Users\owari\ai110-module2show-pawpal-starter
+plugins: anyio-4.13.0
+collected 2 items
 
+tests\test_pawpal.py ..                                                  [100%]
+
+============================== 2 passed in 0.04s ==============================
 ## 📐 Smarter Scheduling
 
 > Fill in once you've implemented scheduling logic.
