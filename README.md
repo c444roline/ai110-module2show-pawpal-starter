@@ -90,14 +90,13 @@ tests\test_pawpal.py ..                                                  [100%]
 ============================== 2 passed in 0.04s ==============================
 ## 📐 Smarter Scheduling
 
-> Fill in once you've implemented scheduling logic.
-
 | Feature | Method(s) | Notes |
 |---------|-----------|-------|
-| Task sorting | | e.g., by priority, duration |
-| Filtering | | e.g., skip tasks if time runs out |
-| Conflict handling | | e.g., overlapping time slots |
-| Recurring tasks | | e.g., daily vs. weekly |
+| Task sorting | `Day.sort_by_time()`, `Day.sort_by_priority()`, `Day.sort_tasks(by=)` | `sort_by_time()` uses `sorted()` with a lambda that converts "HH:MM" strings to integer minutes for correct numeric ordering. `sort_tasks()` is a unified dispatcher accepting `"time"`, `"priority"`, or `"duration"`. |
+| Filtering by pet | `Day.filter_by_pet(pet_name)` | Returns only tasks assigned to a specific pet via list comprehension matching `task.pet_name`. |
+| Filtering by status | `Day.filter_by_status(completed)` | Returns tasks matching a completion status — pass `True` for done, `False` for pending. `generate_schedule()` also skips completed tasks automatically. |
+| Conflict detection | `Day.detect_conflicts()` | Lightweight strategy: sorts tasks by preferred time, then does a forward pass comparing each task's end time (`start + duration`) against subsequent start times. Returns warning tuples instead of raising exceptions so the program never crashes. Warnings are printed at the bottom of `explain_plan()`. |
+| Recurring tasks | `Task.mark_complete()`, `Day.expand_recurring(tasks)` | When a daily or weekly task is marked complete, `mark_complete()` automatically creates and returns a new `Task` with `due_date` advanced by `timedelta(days=1)` or `timedelta(weeks=1)`. One-time tasks return `None`. `expand_recurring()` filters a task list to those applicable to a given day. |
 
 ## 📸 Demo Walkthrough
 

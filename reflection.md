@@ -31,7 +31,10 @@ One change is that tasks do not link back to the pet that needs that task done. 
 **b. Tradeoffs**
 
 - Describe one tradeoff your scheduler makes.
+The conflict detection compares every task's preferred time-slot against other tasks, catching both exact-time matches and overlapping durations. The tradeoff is that it only examines tasks that have a preferred_time set. The tasks without one are placed dynamically by generate_schedule and are never flagged as conflicts. 
+
 - Why is that tradeoff reasonable for this scenario?
+This is reasonable because tasks without a preferred time have no user-specified constraint to violate so the scheduler is free to place them wherever a gap exists so conflict has no meaningful definition for them.
 
 ---
 
@@ -40,13 +43,18 @@ One change is that tasks do not link back to the pet that needs that task done. 
 **a. How you used AI**
 
 - How did you use AI tools during this project (for example: design brainstorming, debugging, refactoring)?
+I used Claude to collaboratively brainstorm and create the UML diagram, revise it at my will, come up with implementations and asked it to ask me for approval before fully implementing it. I also used it for debugging errors if things weren't running and had it describe the issue to me and also refactoring things requested in the project description. i also used it to generate long pieces of documentation in the readme and some docstrings.
+
 - What kinds of prompts or questions were most helpful?
+Asking it to explain things to me in plan mode before implementing it was helpful to me to understand new information and to reduce the amount of prompting to get a final product i was happy with. 
 
 **b. Judgment and verification**
 
 - Describe one moment where you did not accept an AI suggestion as-is.
-- How did you evaluate or verify what the AI suggested?
+The AI suggested some attributes to be set in the Pet class such as species, age, etc. I thought that was too complex at the moment and an unnecessary addition to the app that was purely cosmetic.
 
+- How did you evaluate or verify what the AI suggested?
+I used my own judgement to find that it would be unnecessary and then I highlighted it as context and asked why it suggested it and that confirmed that I did not need to accept the suggestion. 
 ---
 
 ## 4. Testing and Verification

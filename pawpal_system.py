@@ -1,5 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
+from datetime import date, timedelta
 
 
 @dataclass
@@ -11,10 +12,40 @@ class Task:
     priority: str = "medium"
     preferred_time: str = ""
     completed: bool = False
+    recurrence: str = ""
+    due_date: date | None = None
 
-    def mark_complete(self) -> None:
-        """Mark this task as completed."""
+    def mark_complete(self) -> Task | None:
+        """Mark this task as completed. If the task is recurring ('daily' or
+        'weekly'), automatically creates and returns a new Task instance with
+        the due_date advanced by 1 day or 7 days using timedelta. Returns None
+        for one-time tasks."""
         self.completed = True
+        if self.recurrence == "daily":
+            next_date = (self.due_date or date.today()) + timedelta(days=1)
+            return Task(
+                title=self.title,
+                pet_name=self.pet_name,
+                description=self.description,
+                duration_minutes=self.duration_minutes,
+                priority=self.priority,
+                preferred_time=self.preferred_time,
+                recurrence=self.recurrence,
+                due_date=next_date,
+            )
+        if self.recurrence == "weekly":
+            next_date = (self.due_date or date.today()) + timedelta(weeks=1)
+            return Task(
+                title=self.title,
+                pet_name=self.pet_name,
+                description=self.description,
+                duration_minutes=self.duration_minutes,
+                priority=self.priority,
+                preferred_time=self.preferred_time,
+                recurrence=self.recurrence,
+                due_date=next_date,
+            )
+        return None
 
     def set_priority(self, priority: str) -> None:
         """Set the task priority to high, medium, or low."""
@@ -90,30 +121,95 @@ class Day:
         self.tasks.sort(key=lambda t: ranking.get(t.priority, 1))
 
     def sort_by_time(self) -> None:
-        """Sort tasks by preferred time; tasks without one go last."""
-        self.tasks.sort(key=lambda t: t.preferred_time if t.preferred_time else "99:99")
+        """Sort tasks by preferred time. Uses sorted() with a lambda key that
+        converts each 'HH:MM' string to total minutes (e.g. '09:30' -> 570)
+        for correct numeric ordering. Tasks without a preferred time sort last
+        via float('inf')."""
+        self.tasks = sorted(
+            self.tasks,
+            key=lambda t: self._time_to_minutes(t.preferred_time) if t.preferred_time else float("inf"),
+        )
+
+    def sort_tasks(self, by: str = "time") -> None:
+        """Unified sort dispatcher. Accepts 'time' (HH:MM numeric sort),
+        'priority' (high -> medium -> low), or 'duration' (shortest first)."""
+        if by == "time":
+            self.sort_by_time()
+        elif by == "priority":
+            self.sort_by_priority()
+        elif by == "duration":
+            self.tasks.sort(key=lambda t: t.duration_minutes)
+
+    def filter_by_pet(self, pet_name: str) -> list[Task]:
+        """Return only the tasks assigned to the given pet name. Uses a list
+        comprehension that matches task.pet_name exactly."""
+        return [t for t in self.tasks if t.pet_name == pet_name]
+
+    def filter_by_status(self, completed: bool) -> list[Task]:
+        """Return tasks matching the given completion status. Pass
+        completed=True for finished tasks, completed=False for pending ones."""
+        return [t for t in self.tasks if t.completed == completed]
+
+    @staticmethod
+    def expand_recurring(tasks: list[Task]) -> list[Task]:
+        """Filter a task list to those that apply to a given day. Includes
+        one-time tasks (recurrence=''), daily tasks, and weekly tasks."""
+        return [t for t in tasks if t.recurrence in ("", "daily", "weekly")]
+
+    def detect_conflicts(self) -> list[tuple[str, str, str]]:
+        """Lightweight conflict detection that checks for overlapping preferred
+        time slots among incomplete tasks. Sorts timed tasks, then does a single
+        forward pass comparing each task's end time against subsequent start
+        times. Returns a list of (task_a, task_b, warning_message) tuples
+        rather than raising exceptions, so callers can display warnings without
+        crashing the program."""
+        timed = [t for t in self.tasks if t.preferred_time and not t.completed]
+        timed.sort(key=lambda t: t.preferred_time)
+        conflicts = []
+        for i, a in enumerate(timed):
+            a_start = self._time_to_minutes(a.preferred_time)
+            a_end = a_start + a.duration_minutes
+            for b in timed[i + 1:]:
+                b_start = self._time_to_minutes(b.preferred_time)
+                if b_start < a_end:
+                    conflicts.append((
+                        a.title,
+                        b.title,
+                        f"{a.title} ({a.preferred_time}-{self._minutes_to_time(a_end)}) "
+                        f"overlaps with {b.title} ({b.preferred_time})",
+                    ))
+        return conflicts
 
     def get_total_duration(self) -> int:
         """Return the combined duration of all tasks in minutes."""
         return sum(t.duration_minutes for t in self.tasks)
 
     def generate_schedule(self) -> list[dict]:
-        """Build a time-slotted schedule sorted by priority then time."""
+        """Build a time-slotted schedule. Sorts by priority then time (stable
+        sort preserves priority order within the same time slot). Walks a time
+        cursor forward, honoring preferred times when possible and annotating
+        tasks that had to be moved. Skips completed tasks."""
         self.sort_by_priority()
         self.sort_by_time()
         schedule = []
         current = self._time_to_minutes(self.start_time)
         for task in self.tasks:
+            if task.completed:
+                continue
+            note = ""
             if task.preferred_time:
                 preferred = self._time_to_minutes(task.preferred_time)
                 if preferred >= current:
                     current = preferred
+                else:
+                    note = f"moved from {task.preferred_time}"
             schedule.append({
                 "time": self._minutes_to_time(current),
                 "task": task.title,
                 "pet": task.pet_name,
                 "duration": task.duration_minutes,
                 "priority": task.priority,
+                "note": note,
             })
             current += task.duration_minutes
         return schedule
@@ -128,12 +224,20 @@ class Day:
         for entry in schedule:
             pet_label = f" [{entry['pet']}]" if entry["pet"] else ""
             tag = f"[{entry['priority'].upper()}]"
+            note = f"  ** {entry['note']}" if entry.get("note") else ""
             lines.append(
                 f"  {entry['time']}  {tag:<8} {entry['task']}{pet_label}"
-                f"  ({entry['duration']} min)"
+                f"  ({entry['duration']} min){note}"
             )
         lines.append(f"  {divider}")
-        lines.append(f"  Total: {self.get_total_duration()} minutes\n")
+        active_duration = sum(e["duration"] for e in schedule)
+        lines.append(f"  Total: {active_duration} minutes")
+        conflicts = self.detect_conflicts()
+        if conflicts:
+            lines.append(f"\n  Conflicts detected:")
+            for _, _, msg in conflicts:
+                lines.append(f"    !! {msg}")
+        lines.append("")
         return "\n".join(lines)
 
 
